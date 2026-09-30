@@ -1,10 +1,14 @@
 // In-Class Activity 06 — Drawing with Flutter
-// Student: [Your Full Name]
-// Date: September 26, 2026
+// Student: Isaac Owusu
+// Date: September 30, 2026
+
 
 import 'package:flutter/material.dart';
+import 'dart:math';
 
-void main() => runApp(const SmileyApp());
+void main() {
+  runApp(const SmileyApp());
+}
 
 class SmileyApp extends StatelessWidget {
   const SmileyApp({super.key});
@@ -31,31 +35,43 @@ class DrawingPlayground extends StatefulWidget {
 }
 
 class _DrawingPlaygroundState extends State<DrawingPlayground> {
-  // Drawing "state" — changing these + setState() triggers shouldRepaint
-  double mood = 0.8; // 0.0 sad → 1.0 happy
+  double mood = 0.8;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('CustomPainter Smiley Lab')),
+      appBar: AppBar(
+        title: const Text('CustomPainter Smiley Lab'),
+        centerTitle: true,
+      ),
       body: Column(
         children: [
           Expanded(
             child: Center(
               child: CustomPaint(
-                size: const Size(300, 300),
-                painter: SmileyPainter(mood: mood),
+                size: const Size(320, 320),
+                painter: SmileyPainter(
+                  mood: mood,
+                ),
               ),
             ),
           ),
+
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                Text('Mood: ${mood.toStringAsFixed(2)}'),
+                Text(
+                  'Mood: ${mood.toStringAsFixed(2)}',
+                ),
+
                 Slider(
                   value: mood,
-                  onChanged: (double v) => setState(() => mood = v),
+                  onChanged: (double value) {
+                    setState(() {
+                      mood = value;
+                    });
+                  },
                 ),
               ],
             ),
@@ -67,26 +83,105 @@ class _DrawingPlaygroundState extends State<DrawingPlayground> {
 }
 
 class SmileyPainter extends CustomPainter {
-  SmileyPainter({required this.mood});
+  SmileyPainter({
+    required this.mood,
+  });
+
   final double mood;
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Modules 2–3: add eyes and mouth here. Base every position on size, center, or radius.
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.shortestSide * 0.4;
+    // Center the face based on the available canvas size.
+    final center = Offset(
+      size.width / 2,
+      size.height / 2,
+    );
 
+    // Use the shortest side so the face remains responsive.
+    final radius = size.shortestSide * 0.40;
+
+    // Face.
     final facePaint = Paint()
       ..color = Colors.yellow.shade600
       ..style = PaintingStyle.fill;
 
-    canvas.drawCircle(center, radius, facePaint);
+    canvas.drawCircle(
+      center,
+      radius,
+      facePaint,
+    );
 
-    final border = Paint()
+    // Face border.
+    final borderPaint = Paint()
       ..color = Colors.black87
       ..style = PaintingStyle.stroke
       ..strokeWidth = 4;
-    canvas.drawCircle(center, radius, border);
+
+    canvas.drawCircle(
+      center,
+      radius,
+      borderPaint,
+    );
+
+    // Eyes.
+    final eyePaint = Paint()
+      ..color = Colors.black87
+      ..style = PaintingStyle.fill;
+
+    final eyeY = center.dy - radius * 0.18;
+    final eyeDx = radius * 0.35;
+    final eyeRadius = radius * 0.09;
+
+    canvas.drawCircle(
+      Offset(center.dx - eyeDx, eyeY),
+      eyeRadius,
+      eyePaint,
+    );
+
+    canvas.drawCircle(
+      Offset(center.dx + eyeDx, eyeY),
+      eyeRadius,
+      eyePaint,
+    );
+
+    // Mouth.
+    final mouthPaint = Paint()
+      ..color = Colors.black87
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round;
+
+    final mouthRect = Rect.fromCenter(
+      center: Offset(
+        center.dx,
+        center.dy + radius * 0.15,
+      ),
+      width: radius * 1.0,
+      height: radius * (0.4 + mood * 0.5),
+    );
+
+    if (mood >= 0.5) {
+      canvas.drawArc(
+        mouthRect,
+        0.15 * pi,
+        0.70 * pi,
+        false,
+        mouthPaint,
+      );
+    } else {
+      final frownRect = mouthRect.translate(
+        0,
+        radius * 0.25,
+      );
+
+      canvas.drawArc(
+        frownRect,
+        1.15 * pi,
+        0.70 * pi,
+        false,
+        mouthPaint,
+      );
+    }
   }
 
   @override
